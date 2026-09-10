@@ -24,6 +24,7 @@ public class Main {
     }
 
 
+
     public static String getStatus(
             double currentPrice,
             double previousClose
@@ -52,33 +53,33 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
 
-        Stock stock = new Stock();
+
 
 
         System.out.print("请输入股票代码：");
-        stock.symbol = scanner.nextLine();
+        String symbol = scanner.nextLine();
 
 
         System.out.print("请输入昨日价格：");
-        stock.previousClose = scanner.nextDouble();
+        double previousClose = scanner.nextDouble();
 
 
         System.out.print("请输入当前价格：");
-        stock.currentPrice = scanner.nextDouble();
+        double currentPrice = scanner.nextDouble();
 
-
+        Stock stock=new Stock(symbol,previousClose,currentPrice);
 
         double change =
                 calculateChange(
-                        stock.currentPrice,
-                        stock.previousClose
+                        stock.getCurrentPrice(),
+                        stock.getPreviousClose()
                 );
 
 
         double percent =
                 calculatePercent(
                         change,
-                        stock.previousClose
+                        stock.getPreviousClose()
                 );
 
 
@@ -86,7 +87,7 @@ public class Main {
 
         System.out.println("========== 股票行情 ==========");
 
-        System.out.println("股票：" + stock.symbol);
+        System.out.println("股票：" + stock.getSymbol());
 
         System.out.println("涨跌额：" + change);
 
@@ -95,8 +96,8 @@ public class Main {
         System.out.println(
                 "状态：" +
                 getStatus(
-                        stock.currentPrice,
-                        stock.previousClose
+                        stock.getCurrentPrice(),
+                        stock.getPreviousClose()
                 )
         );
 
