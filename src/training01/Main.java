@@ -5,12 +5,10 @@ import java.util.Scanner;
 
 public class Main {
 
-    public static void main(String[] args) {
-
-        Scanner scanner = new Scanner(System.in);
-
-        ArrayList<Stock> stocks = new ArrayList<>();
-
+    public static void inputInitialStocks(
+            Scanner scanner,
+            ArrayList<Stock> stocks
+    ) {
 
         System.out.print("请输入股票数量：");
         int num = scanner.nextInt();
@@ -18,7 +16,6 @@ public class Main {
         scanner.nextLine();
 
 
-        // 输入初始股票
         for (int i = 0; i < num; i++) {
 
             System.out.print("请输入股票代码：");
@@ -40,6 +37,167 @@ public class Main {
 
             scanner.nextLine();
         }
+    }
+
+    public static void showAllStocks(ArrayList<Stock> stocks){
+        for (Stock stock : stocks) {
+
+            System.out.println();
+            System.out.println("========== 股票行情 ==========");
+
+            System.out.println(
+                    "股票：" + stock.getSymbol()
+            );
+
+            System.out.println(
+                    "涨跌额：" + stock.getChange()
+            );
+
+            System.out.println(
+                    "涨跌幅：" +
+                            stock.getChangePercent() +
+                            "%"
+            );
+
+            System.out.println(
+                    "状态：" + stock.getStatus()
+            );
+        }
+    }
+
+    public static void searchStock(
+            Scanner scanner,
+            ArrayList<Stock> stocks
+    ) {
+        System.out.print(
+                "请输入要查询的股票代码："
+        );
+
+        String search = scanner.nextLine();
+
+        boolean found = false;
+
+
+        for (Stock stock : stocks) {
+
+            if (
+                    stock.getSymbol()
+                            .equalsIgnoreCase(search)
+            ) {
+
+                System.out.println();
+                System.out.println(
+                        "========== 查询结果 =========="
+                );
+
+                System.out.println(
+                        "股票：" + stock.getSymbol()
+                );
+
+                System.out.println(
+                        "涨跌额：" + stock.getChange()
+                );
+
+                System.out.println(
+                        "涨跌幅：" +
+                                stock.getChangePercent() +
+                                "%"
+                );
+
+                System.out.println(
+                        "状态：" + stock.getStatus()
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+
+        if (!found) {
+            System.out.println("未找到该股票");
+        }
+
+    }
+
+    public static void addStock(Scanner scanner,ArrayList<Stock> stocks){
+        System.out.print("请输入股票代码：");
+        String symbol = scanner.nextLine();
+
+        System.out.print("请输入昨日价格：");
+        double previousClose = scanner.nextDouble();
+
+        System.out.print("请输入当前价格：");
+        double currentPrice = scanner.nextDouble();
+
+        Stock stock = new Stock(
+                symbol,
+                previousClose,
+                currentPrice
+        );
+
+        stocks.add(stock);
+
+        scanner.nextLine();
+
+        System.out.println(
+                "股票 " +
+                        stock.getSymbol() +
+                        " 添加成功！"
+        );
+    }
+
+    public static void deleteStock(
+            Scanner scanner,
+            ArrayList<Stock> stocks
+    ){
+        System.out.print(
+                "请输入要删除的股票代码："
+        );
+
+        String target = scanner.nextLine();
+
+        boolean found = false;
+
+
+        for (int i = 0; i < stocks.size(); i++) {
+
+            Stock stock = stocks.get(i);
+
+            if (
+                    stock.getSymbol()
+                            .equalsIgnoreCase(target)
+            ) {
+
+                stocks.remove(i);
+
+                System.out.println(
+                        "股票 " +
+                                stock.getSymbol() +
+                                " 删除成功！"
+                );
+
+                found = true;
+
+                break;
+            }
+        }
+
+
+        if (!found) {
+            System.out.println("未找到该股票");
+        }
+    }
+
+    public static void runMenu(
+            Scanner scanner,
+            ArrayList<Stock> stocks
+    ) {
+
+
+
+        inputInitialStocks(scanner, stocks);
 
 
         // 股票监控系统菜单
@@ -61,148 +219,23 @@ public class Main {
 
 
             if (choice == 1) {
+                showAllStocks(stocks);
 
-                for (Stock stock : stocks) {
 
-                    System.out.println();
-                    System.out.println("========== 股票行情 ==========");
-
-                    System.out.println(
-                            "股票：" + stock.getSymbol()
-                    );
-
-                    System.out.println(
-                            "涨跌额：" + stock.getChange()
-                    );
-
-                    System.out.println(
-                            "涨跌幅：" +
-                                    stock.getChangePercent() +
-                                    "%"
-                    );
-
-                    System.out.println(
-                            "状态：" + stock.getStatus()
-                    );
-                }
 
             } else if (choice == 2) {
-
-                System.out.print(
-                        "请输入要查询的股票代码："
-                );
-
-                String search = scanner.nextLine();
-
-                boolean found = false;
+                searchStock(scanner,stocks);
 
 
-                for (Stock stock : stocks) {
-
-                    if (
-                            stock.getSymbol()
-                                    .equalsIgnoreCase(search)
-                    ) {
-
-                        System.out.println();
-                        System.out.println(
-                                "========== 查询结果 =========="
-                        );
-
-                        System.out.println(
-                                "股票：" + stock.getSymbol()
-                        );
-
-                        System.out.println(
-                                "涨跌额：" + stock.getChange()
-                        );
-
-                        System.out.println(
-                                "涨跌幅：" +
-                                        stock.getChangePercent() +
-                                        "%"
-                        );
-
-                        System.out.println(
-                                "状态：" + stock.getStatus()
-                        );
-
-                        found = true;
-
-                        break;
-                    }
-                }
-
-
-                if (!found) {
-                    System.out.println("未找到该股票");
-                }
 
             } else if (choice == 3) {
+                addStock(scanner,stocks);
 
-                System.out.print("请输入股票代码：");
-                String symbol = scanner.nextLine();
 
-                System.out.print("请输入昨日价格：");
-                double previousClose = scanner.nextDouble();
-
-                System.out.print("请输入当前价格：");
-                double currentPrice = scanner.nextDouble();
-
-                Stock stock = new Stock(
-                        symbol,
-                        previousClose,
-                        currentPrice
-                );
-
-                stocks.add(stock);
-
-                scanner.nextLine();
-
-                System.out.println(
-                        "股票 " +
-                                stock.getSymbol() +
-                                " 添加成功！"
-                );
 
             } else if (choice == 4) {
 
-                System.out.print(
-                        "请输入要删除的股票代码："
-                );
-
-                String target = scanner.nextLine();
-
-                boolean found = false;
-
-
-                for (int i = 0; i < stocks.size(); i++) {
-
-                    Stock stock = stocks.get(i);
-
-                    if (
-                            stock.getSymbol()
-                                    .equalsIgnoreCase(target)
-                    ) {
-
-                        stocks.remove(i);
-
-                        System.out.println(
-                                "股票 " +
-                                        stock.getSymbol() +
-                                        " 删除成功！"
-                        );
-
-                        found = true;
-
-                        break;
-                    }
-                }
-
-
-                if (!found) {
-                    System.out.println("未找到该股票");
-                }
+                deleteStock(scanner,stocks);
 
             } else if (choice == 5) {
 
@@ -219,7 +252,17 @@ public class Main {
         }
 
 
-        scanner.close();
     }
 
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        ArrayList<Stock> stocks = new ArrayList<>();
+
+        runMenu(scanner,stocks);
+
+
+        scanner.close();
+
+    }
 }
