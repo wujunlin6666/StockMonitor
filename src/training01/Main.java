@@ -1,20 +1,20 @@
 package training01;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
 
     public static void inputInitialStocks(
             Scanner scanner,
-            ArrayList<Stock> stocks
+            List<Stock> stocks
     ) {
 
         System.out.print("请输入股票数量：");
         int num = scanner.nextInt();
 
         scanner.nextLine();
-
 
         for (int i = 0; i < num; i++) {
 
@@ -39,7 +39,11 @@ public class Main {
         }
     }
 
-    public static void showAllStocks(ArrayList<Stock> stocks){
+
+    public static void showAllStocks(
+            List<Stock> stocks
+    ) {
+
         for (Stock stock : stocks) {
 
             System.out.println();
@@ -65,10 +69,12 @@ public class Main {
         }
     }
 
+
     public static void searchStock(
             Scanner scanner,
-            ArrayList<Stock> stocks
+            List<Stock> stocks
     ) {
+
         System.out.print(
                 "请输入要查询的股票代码："
         );
@@ -76,7 +82,6 @@ public class Main {
         String search = scanner.nextLine();
 
         boolean found = false;
-
 
         for (Stock stock : stocks) {
 
@@ -114,14 +119,17 @@ public class Main {
             }
         }
 
-
         if (!found) {
             System.out.println("未找到该股票");
         }
-
     }
 
-    public static void addStock(Scanner scanner,ArrayList<Stock> stocks){
+
+    public static void addStock(
+            Scanner scanner,
+            List<Stock> stocks
+    ) {
+
         System.out.print("请输入股票代码：");
         String symbol = scanner.nextLine();
 
@@ -148,10 +156,12 @@ public class Main {
         );
     }
 
+
     public static void deleteStock(
             Scanner scanner,
-            ArrayList<Stock> stocks
-    ){
+            List<Stock> stocks
+    ) {
+
         System.out.print(
                 "请输入要删除的股票代码："
         );
@@ -159,7 +169,6 @@ public class Main {
         String target = scanner.nextLine();
 
         boolean found = false;
-
 
         for (int i = 0; i < stocks.size(); i++) {
 
@@ -184,23 +193,56 @@ public class Main {
             }
         }
 
-
         if (!found) {
             System.out.println("未找到该股票");
         }
     }
 
-    public static void runMenu(
-            Scanner scanner,
-            ArrayList<Stock> stocks
+
+    public static void sortBySymbol(
+            List<Stock> stocks
     ) {
 
+        stocks.sort((stock1, stock2) -> {
+            return stock1.getSymbol()
+                    .compareToIgnoreCase(
+                            stock2.getSymbol()
+                    );
+        });
+    }
 
 
-        inputInitialStocks(scanner, stocks);
+    public static void sortByCurrentPrice(
+            List<Stock> stocks
+    ) {
+
+        stocks.sort((stock1, stock2) -> {
+            return Double.compare(
+                    stock2.getCurrentPrice(),
+                    stock1.getCurrentPrice()
+            );
+        });
+    }
 
 
-        // 股票监控系统菜单
+    public static void sortByChangePercent(
+            List<Stock> stocks
+    ) {
+
+        stocks.sort((stock1, stock2) -> {
+            return Double.compare(
+                    stock2.getChangePercent(),
+                    stock1.getChangePercent()
+            );
+        });
+    }
+
+
+    public static void runMenu(
+            Scanner scanner,
+            List<Stock> stocks
+    ) {
+
         while (true) {
 
             System.out.println();
@@ -209,7 +251,10 @@ public class Main {
             System.out.println("2. 查询股票");
             System.out.println("3. 添加股票");
             System.out.println("4. 删除股票");
-            System.out.println("5. 退出");
+            System.out.println("5. 按股票代码排序");
+            System.out.println("6. 按当前价格从高到低排序");
+            System.out.println("7. 按涨跌幅从高到低排序");
+            System.out.println("8. 退出");
 
             System.out.print("请选择：");
 
@@ -217,27 +262,47 @@ public class Main {
 
             scanner.nextLine();
 
-
             if (choice == 1) {
+
                 showAllStocks(stocks);
 
-
-
             } else if (choice == 2) {
-                searchStock(scanner,stocks);
 
-
+                searchStock(scanner, stocks);
 
             } else if (choice == 3) {
-                addStock(scanner,stocks);
 
-
+                addStock(scanner, stocks);
 
             } else if (choice == 4) {
 
-                deleteStock(scanner,stocks);
+                deleteStock(scanner, stocks);
 
             } else if (choice == 5) {
+
+                sortBySymbol(stocks);
+
+                System.out.println(
+                        "已按股票代码排序"
+                );
+
+            } else if (choice == 6) {
+
+                sortByCurrentPrice(stocks);
+
+                System.out.println(
+                        "已按当前价格从高到低排序"
+                );
+
+            } else if (choice == 7) {
+
+                sortByChangePercent(stocks);
+
+                System.out.println(
+                        "已按涨跌幅从高到低排序"
+                );
+
+            } else if (choice == 8) {
 
                 System.out.println("程序已退出");
 
@@ -250,19 +315,19 @@ public class Main {
                 );
             }
         }
-
-
     }
 
+
     public static void main(String[] args) {
+
         Scanner scanner = new Scanner(System.in);
 
-        ArrayList<Stock> stocks = new ArrayList<>();
+        List<Stock> stocks = new ArrayList<>();
 
-        runMenu(scanner,stocks);
+        inputInitialStocks(scanner, stocks);
 
+        runMenu(scanner, stocks);
 
         scanner.close();
-
     }
 }
