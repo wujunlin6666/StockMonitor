@@ -40,4 +40,5 @@ bin/
 
 .DS_Store
 
-*.classstock.txt
+*.class
+stock.txt
