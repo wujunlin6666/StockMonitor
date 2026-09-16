@@ -1,6 +1,5 @@
 package training01;
 
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Main {
@@ -13,15 +12,15 @@ public class Main {
 
         StockManager manager = new StockManager();
 
+        StockFileManager fileManager = new StockFileManager("stock.txt");
+
+        fileManager.loadStocks(manager);
+
         Menu menu = new Menu(scanner,manager);
 
-        InputUtil.inputInitialStocks(
-                scanner,
-                manager
-        );
-
-
         menu.start();
+
+        fileManager.saveStocks(manager);
 
 
         scanner.close();
