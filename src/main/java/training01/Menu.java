@@ -31,15 +31,11 @@ public class Menu{
         );
 
 
-        System.out.println(
-                "涨跌额：%.2f%n" + stock.getChange()
-        );
 
+        System.out.printf("涨跌额：%.2f%n", stock.getChange());
 
-        System.out.println(
-                "涨跌幅：%.2f%%%n"
-                        + stock.getChangePercent()
-        );
+        System.out.printf("涨跌幅：%.2f%%%n", stock.getChangePercent());
+
 
 
         System.out.println(
