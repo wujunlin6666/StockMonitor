@@ -13,15 +13,9 @@ public class StockApiClient {
 
     public Stock fetchDemoIbm() throws IOException, InterruptedException {
 
-        // 1. 获取完整 JSON
         JsonNode root = client.getJson(DEMO_URL);
 
-        // 2. 获取行情对象
-
         return parseQuote(root);
-
-
-        // 8. 创建并返回 Stock 对象
     }
 
 

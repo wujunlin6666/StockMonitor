@@ -1,5 +1,6 @@
 package training01;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 
@@ -31,14 +32,13 @@ public class Menu{
 
 
         System.out.println(
-                "涨跌额：" + stock.getChange()
+                "涨跌额：%.2f%n" + stock.getChange()
         );
 
 
         System.out.println(
-                "涨跌幅："
+                "涨跌幅：%.2f%%%n"
                         + stock.getChangePercent()
-                        + "%"
         );
 
 
@@ -95,9 +95,8 @@ public class Menu{
                     "7. 按涨跌幅从高到低排序"
             );
 
-            System.out.println(
-                    "8. 退出"
-            );
+            System.out.println("8. 获取 IBM 演示行情");
+            System.out.println("9. 退出");
 
 
             int choice = InputUtil.readInt(
@@ -201,16 +200,44 @@ public class Menu{
             } else if (choice == 8) {
 
                 System.out.println(
-                        "程序已退出"
+                        "获取 IBM 演示行情"
                 );
 
+
+
+
+                Stock target=manager.searchStock("IBM");
+
+                if(target != null){
+                    System.out.println("IBM 已存在，暂不重复添加");
+                }else {
+                    try {
+                        StockApiClient api = new StockApiClient();
+
+                        Stock stock = api.fetchDemoIbm();
+
+                        manager.addStock(stock);
+                        System.out.println("IBM 添加成功");
+                        displayStock(stock);
+
+                    }catch (IOException e){
+                        System.out.println("获取行情失败：" + e.getMessage());
+                    }catch (InterruptedException e){
+                        Thread.currentThread().interrupt();
+                        System.out.println("行情请求被中断");
+                        break;
+                    }
+                }
+
+
+
+
+            } else if(choice==9){
+
+                System.out.println("程序已退出");
                 break;
-
-            } else {
-
-                System.out.println(
-                        "输入有误，请重新选择"
-                );
+            }else {
+                System.out.println("输入有误，请重新选择");
             }
         }
     }
