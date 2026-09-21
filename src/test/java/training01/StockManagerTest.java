@@ -54,5 +54,27 @@ public class StockManagerTest {
         assertEquals(1, manager.getStocks().size());
     }
 
+    @Test
+    void testUpdateStock() {
+        StockManager manager = new StockManager();
+
+        Stock oldStock = new Stock("AAPL", 100, 120);
+        Stock newStock = new Stock("AAPL", 337.09, 335.73);
+
+        manager.addStock(oldStock);
+
+        boolean updated = manager.updateStock(newStock);
+
+        assertTrue(updated);
+        assertEquals(1, manager.getStocks().size());
+        assertSame(newStock, manager.searchStock("AAPL"));
+
+        Stock missing = new Stock("TSLA", 300, 310);
+
+        assertFalse(manager.updateStock(missing));
+        assertEquals(1, manager.getStocks().size());
+        assertSame(newStock, manager.searchStock("AAPL"));
+    }
+
 
 }

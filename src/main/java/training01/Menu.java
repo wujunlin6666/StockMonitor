@@ -95,6 +95,7 @@ public class Menu{
 
             System.out.println("8. 从 Alpaca 获取股票");
             System.out.println("9. 退出");
+            System.out.println("10. 刷新指定股票行情");
 
 
             int choice = InputUtil.readInt(
@@ -233,8 +234,34 @@ public class Menu{
 
                 System.out.println("程序已退出");
                 break;
-            }else {
-                System.out.println("输入有误，请重新选择");
+            }else if(choice==10){
+                System.out.print("请输入要刷新的股票代码：");
+
+                String symbol=scanner.nextLine().trim().toUpperCase();
+                Stock oldStock=manager.searchStock(symbol);
+                if (oldStock == null) {
+                    System.out.println("自选列表中没有这只股票");
+                    continue;
+                }
+
+                try {
+                    StockApiClient client=new StockApiClient();
+
+                    Stock newStock=client.fetchStock(symbol);
+                    boolean updated = manager.updateStock(newStock);
+                    if (updated) {
+                        displayStock(newStock);
+                        System.out.println("刷新成功");
+                    } else {
+                        System.out.println("刷新失败：未找到原股票");
+                    }
+                }catch (IOException e){
+                    System.out.println("刷新失败：" + e.getMessage());
+                }catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.out.println("股票请求被中断");
+                    return;
+                }
             }
         }
     }

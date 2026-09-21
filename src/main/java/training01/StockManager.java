@@ -120,4 +120,20 @@ public class StockManager {
 
         });
     }
+
+    public boolean updateStock(Stock newStock) {
+
+        Stock targetstock = searchStock(newStock.getSymbol().trim());
+        if(targetstock==null){
+            return false;
+        }else {
+            int index=stocks.indexOf(targetstock);
+            stocks.set(index,newStock);
+            return true;
+        }
+
+
+
+
+    }
 }
