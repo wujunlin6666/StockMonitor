@@ -35,6 +35,8 @@ public class Menu{
         System.out.printf("涨跌额：%.2f%n", stock.getChange());
 
         System.out.printf("涨跌幅：%.2f%%%n", stock.getChangePercent());
+        System.out.printf("前收盘价：%.2f%n", stock.getPreviousClose());
+        System.out.printf("当前价格：%.2f%n", stock.getCurrentPrice());
 
 
 
@@ -91,7 +93,7 @@ public class Menu{
                     "7. 按涨跌幅从高到低排序"
             );
 
-            System.out.println("8. 获取 IBM 演示行情");
+            System.out.println("8. 从 Alpaca 获取股票");
             System.out.println("9. 退出");
 
 
@@ -194,41 +196,40 @@ public class Menu{
                 );
 
             } else if (choice == 8) {
+                System.out.println("请输入股票代码：");
+                String symbol = scanner.nextLine().trim().toUpperCase();
 
-                System.out.println(
-                        "获取 IBM 演示行情"
-                );
-
-
+                Stock existingStock = manager.searchStock(symbol);
 
 
-                Stock target=manager.searchStock("IBM");
+                if (existingStock == null) {
 
-                if(target != null){
-                    System.out.println("IBM 已存在，暂不重复添加");
-                }else {
                     try {
-                        StockApiClient api = new StockApiClient();
+                        StockApiClient client = new StockApiClient();
 
-                        Stock stock = api.fetchDemoIbm();
+
+                        Stock stock = client.fetchStock(symbol);
 
                         manager.addStock(stock);
-                        System.out.println("IBM 添加成功");
                         displayStock(stock);
 
-                    }catch (IOException e){
-                        System.out.println("获取行情失败：" + e.getMessage());
-                    }catch (InterruptedException e){
+                        System.out.println("已添加到自选列表");
+
+                    } catch (IOException e) {
+                        System.out.println("获取股票失败：" + e.getMessage());
+
+                    } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        System.out.println("行情请求被中断");
-                        break;
+                        System.out.println("股票请求被中断");
+                        return;
                     }
+
+                } else {
+
+                    System.out.println("该股票已存在于自选列表");
+
                 }
-
-
-
-
-            } else if(choice==9){
+            }else if(choice==9){
 
                 System.out.println("程序已退出");
                 break;

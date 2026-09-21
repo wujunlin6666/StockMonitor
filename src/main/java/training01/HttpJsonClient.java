@@ -38,6 +38,43 @@ public class HttpJsonClient {
         return mapper.readTree(response.body());
     }
 
+
+    public JsonNode getJson(
+            String url,
+            String apiKey,
+            String secretKey
+    ) throws IOException, InterruptedException {
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("APCA-API-KEY-ID", apiKey)
+                .header("APCA-API-SECRET-KEY", secretKey)
+                .GET()
+                .build();
+
+        // TODO 1：发送请求，获得 HttpResponse<String>
+
+        HttpResponse<String> response = client.send(
+                request,
+                HttpResponse.BodyHandlers.ofString()
+        );
+        // TODO 2：检查 statusCode 是否为 2xx
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new IOException(
+                    "HTTP 请求失败，状态码：" + response.statusCode()
+            );
+        }
+
+        // TODO 3：使用 ObjectMapper 解析 body，返回 JsonNode
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        return mapper.readTree(response.body());
     }
+
+
+}
 
 

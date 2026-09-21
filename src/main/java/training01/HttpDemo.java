@@ -1,6 +1,7 @@
 
 package training01;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 
 public class HttpDemo {
@@ -8,28 +9,31 @@ public class HttpDemo {
     public static void main(String[] args)
             throws IOException, InterruptedException {
 
-        // 1. 从 API 获取 Stock 对象
-        StockApiClient api = new StockApiClient();
-        Stock stock = api.fetchDemoIbm();
+        // 1. 从环境变量读取密钥
+        String apiKey = System.getenv("ALPACA_API_KEY_ID");
+        String secretKey = System.getenv("ALPACA_API_SECRET_KEY");
 
-        // 2. 打印股票信息
+        // 2. 检查密钥是否存在
+        if (apiKey == null || apiKey.isBlank()
+                || secretKey == null || secretKey.isBlank()) {
+
+            System.out.println("请先配置 Alpaca 环境变量");
+            return;
+        }
+
+        // 3. AAPL 行情快照接口
+        String url =
+                "https://data.alpaca.markets/v2/stocks/AAPL/snapshot?feed=iex";
+
+        // 4. 发送带认证信息的请求
+        StockApiClient api = new StockApiClient();
+
+        Stock stock = api.fetchStock("AAPL");
+
         System.out.println(stock.getSymbol());
         System.out.println(stock.getPreviousClose());
         System.out.println(stock.getCurrentPrice());
         System.out.println(stock.getStatus());
 
-        // 3. 加入股票管理器
-        StockManager manager = new StockManager();
-        manager.addStock(stock);
-
-        // 4. 查询股票并使用返回值
-        Stock found = manager.searchStock("IBM");
-
-        if (found != null) {
-            System.out.println("查询成功：" + found.getSymbol());
-            System.out.println("股票状态：" + found.getStatus());
-        } else {
-            System.out.println("未找到 IBM");
-        }
     }
 }
