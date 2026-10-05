@@ -10,9 +10,74 @@ public class Menu{
 
     private StockManager manager;
 
-    public Menu(Scanner scanner,StockManager manager){
+    private SectorManager sectorManager;
+
+    public Menu(Scanner scanner,StockManager manager,SectorManager sectorManager){
         this.scanner=scanner;
         this.manager=manager;
+        this.sectorManager=sectorManager;
+    }
+
+    private boolean refreshSectorStocks(Sector sector) {
+
+        StockApiClient client = new StockApiClient();
+
+        boolean allSuccess = true;
+
+        for (SectorComponent component : sector.getComponents()) {
+
+            String symbol = component.getSymbol();
+
+            try {
+                Stock stock = client.fetchStock(symbol);
+
+                Stock oldStock = manager.searchStock(symbol);
+
+                if (oldStock != null) {
+                    manager.updateStock(stock);
+                } else {
+                    manager.addStock(stock);
+                }
+
+                System.out.println(symbol + " 刷新成功");
+
+            } catch (IOException e) {
+
+                System.out.println(
+                        symbol + " 刷新失败：" + e.getMessage()
+                );
+
+                allSuccess = false;
+
+            } catch (InterruptedException e) {
+
+                Thread.currentThread().interrupt();
+
+                System.out.println(
+                        symbol + " 刷新被中断"
+                );
+
+                return false;
+            }
+        }
+        return allSuccess;
+    }
+
+    private void displaySectors() {
+
+        for (Sector sector : sectorManager.getSectors()) {
+
+            System.out.println("板块：" + sector.getName());
+
+            for (SectorComponent component : sector.getComponents()) {
+
+                System.out.println(
+                        component.getSymbol()
+                                + " 权重："
+                                + component.getWeight()
+                );
+            }
+        }
     }
 
     public void displayStock(
@@ -96,7 +161,9 @@ public class Menu{
             System.out.println("8. 从 Alpaca 获取股票");
             System.out.println("9. 退出");
             System.out.println("10. 刷新指定股票行情");
+            System.out.println("11. 查看全部板块");
 
+            System.out.println("12. 刷新板块行情");
 
             int choice = InputUtil.readInt(
                     scanner,
@@ -261,6 +328,40 @@ public class Menu{
                     Thread.currentThread().interrupt();
                     System.out.println("股票请求被中断");
                     return;
+                }
+            } else if (choice == 11) {
+                displaySectors();
+            } else if (choice == 12) {
+
+                System.out.print("请输入板块名称：");
+                String name = scanner.nextLine().trim();
+
+                Sector sector = sectorManager.searchSector(name);
+
+                if (sector == null) {
+                    System.out.println("板块不存在");
+
+                } else if (!sector.isWeightValid()) {
+                    System.out.println("板块权重配置不合法");
+
+                } else {
+
+                    boolean refresh = refreshSectorStocks(sector);
+
+                    if (!refresh) {
+                        System.out.println("板块数据刷新不完整");
+
+                    } else {
+
+                        double changePercent =
+                                sector.calculateChangePercent(manager);
+
+                        System.out.printf(
+                                "板块 %s 涨跌幅：%.2f%%%n",
+                                sector.getName(),
+                                changePercent
+                        );
+                    }
                 }
             }
         }

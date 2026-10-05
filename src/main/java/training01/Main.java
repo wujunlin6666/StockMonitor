@@ -14,16 +14,25 @@ public class Main {
 
         StockManager manager = new StockManager();
 
+        SectorManager sectorManager = new SectorManager();
+
         StockFileManager fileManager = new StockFileManager("stock.txt");
 
         fileManager.loadStocks(manager);
 
-        Menu menu = new Menu(scanner,manager);
+        Sector aiSector = new Sector("AI算力");
+
+        aiSector.addComponent("NVDA", 0.5);
+        aiSector.addComponent("AMD", 0.3);
+        aiSector.addComponent("AVGO", 0.2);
+
+        sectorManager.addSector(aiSector);
+
+        Menu menu = new Menu(scanner,manager,sectorManager);
 
         menu.start();
 
         fileManager.saveStocks(manager);
-
 
         scanner.close();
     }
