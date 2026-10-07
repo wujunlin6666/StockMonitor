@@ -162,8 +162,8 @@ public class Menu{
             System.out.println("9. 退出");
             System.out.println("10. 刷新指定股票行情");
             System.out.println("11. 查看全部板块");
-
             System.out.println("12. 刷新板块行情");
+            System.out.println("13. 查看板块详情");
 
             int choice = InputUtil.readInt(
                     scanner,
@@ -361,6 +361,70 @@ public class Menu{
                                 sector.getName(),
                                 changePercent
                         );
+                    }
+                }
+            } else if (choice == 13) {
+
+                System.out.print("请输入板块名称：");
+                String name = scanner.nextLine().trim();
+
+                Sector sector = sectorManager.searchSector(name);
+
+                if (sector == null) {
+
+                    System.out.println("板块不存在");
+
+                } else if (!sector.isWeightValid()) {
+
+                    System.out.println("板块权重配置不合法");
+
+                } else {
+
+                    boolean refresh = refreshSectorStocks(sector);
+
+                    if (!refresh) {
+
+                        System.out.println("板块数据刷新不完整");
+
+                    } else {
+
+                        double changePercent =
+                                sector.calculateChangePercent(manager);
+
+                        System.out.println();
+                        System.out.println(
+                                "========== " + sector.getName() + " =========="
+                        );
+
+                        System.out.printf(
+                                "板块涨跌幅：%+.2f%%%n%n",
+                                changePercent
+                        );
+
+                        for (SectorComponent component : sector.getComponents()) {
+
+                            Stock stock =
+                                    manager.searchStock(component.getSymbol());
+
+                            System.out.println(component.getSymbol());
+
+                            System.out.printf(
+                                    "涨跌幅：%+.2f%%%n",
+                                    stock.getChangePercent()
+                            );
+
+                            System.out.printf(
+                                    "权重：%.0f%%%n",
+                                    component.getWeight() * 100
+                            );
+
+                            System.out.printf(
+                                    "贡献：%+.2f%%%n",
+                                    component.calculateContribution(stock)
+                            );
+
+                            System.out.println();
+                        }
                     }
                 }
             }

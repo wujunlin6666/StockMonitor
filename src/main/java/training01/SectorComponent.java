@@ -18,5 +18,14 @@ public class SectorComponent {
         return weight;
     }
 
+    public double calculateContribution(Stock stock){
+        if(stock.getSymbol().trim().equalsIgnoreCase(symbol.trim())){
+            return stock.getChangePercent()*weight;
+        }else {
+            throw new IllegalArgumentException(
+                    "股票代码与板块成分股不匹配"
+            );
+        }
+    }
 
 }
