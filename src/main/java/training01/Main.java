@@ -1,39 +1,32 @@
 package training01;
 
 import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
 
 
         Scanner scanner =
                 new Scanner(System.in);
 
+        String url = "jdbc:mysql://127.0.0.1:3306/stock_monitor";
+        String user = "stock_app";
 
-        StockManager manager = new StockManager();
+        System.out.print("请输入 MySQL 密码：");
+        String password = scanner.nextLine();
 
-        SectorManager sectorManager = new SectorManager();
+        try (Connection connection =
+                     DriverManager.getConnection(url, user, password)) {
 
-        StockFileManager fileManager = new StockFileManager("stock.txt");
+            Menu menu = new Menu(scanner, connection);
 
-        fileManager.loadStocks(manager);
-
-        Sector aiSector = new Sector("AI算力");
-
-        aiSector.addComponent("NVDA", 0.5);
-        aiSector.addComponent("AMD", 0.3);
-        aiSector.addComponent("AVGO", 0.2);
-
-        sectorManager.addSector(aiSector);
-
-        Menu menu = new Menu(scanner,manager,sectorManager);
-
-        menu.start();
-
-        fileManager.saveStocks(manager);
-
+            menu.start();
+        }
         scanner.close();
     }
 }

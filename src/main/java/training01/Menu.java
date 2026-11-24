@@ -1,83 +1,51 @@
 package training01;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 
 public class Menu{
 
     private Scanner scanner;
+    private Connection connection;
 
-    private StockManager manager;
-
-    private SectorManager sectorManager;
-
-    public Menu(Scanner scanner,StockManager manager,SectorManager sectorManager){
+    public Menu(Scanner scanner,Connection connection){
         this.scanner=scanner;
-        this.manager=manager;
-        this.sectorManager=sectorManager;
+        this.connection=connection;
     }
 
-    private boolean refreshSectorStocks(Sector sector) {
+
+
+    private boolean refreshSectorStocks(List<SectorStockDetail> details) {
 
         StockApiClient client = new StockApiClient();
 
         boolean allSuccess = true;
 
-        for (SectorComponent component : sector.getComponents()) {
+        StockRepository repository=new StockRepository();
 
-            String symbol = component.getSymbol();
-
-            try {
-                Stock stock = client.fetchStock(symbol);
-
-                Stock oldStock = manager.searchStock(symbol);
-
-                if (oldStock != null) {
-                    manager.updateStock(stock);
-                } else {
-                    manager.addStock(stock);
+        for (SectorStockDetail detail : details) {
+            String symbol=detail.getStock().getSymbol();
+            try{
+                Stock latestStock = client.fetchStock(symbol);
+                int updatedRows = repository.updateQuote(connection, latestStock);
+                if(updatedRows==0){
+                    allSuccess=false;
+                    System.out.println(symbol + " 未能保存最新行情。");
                 }
-
-                System.out.println(symbol + " 刷新成功");
-
-            } catch (IOException e) {
-
-                System.out.println(
-                        symbol + " 刷新失败：" + e.getMessage()
-                );
-
-                allSuccess = false;
-
-            } catch (InterruptedException e) {
-
+            }catch (IOException | SQLException e){
+                System.out.println(symbol + " 刷新失败：" + e.getMessage());
+                allSuccess=false;
+            }catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-
-                System.out.println(
-                        symbol + " 刷新被中断"
-                );
-
+                System.out.println(symbol + " 刷新被中断。");
                 return false;
             }
         }
         return allSuccess;
-    }
-
-    private void displaySectors() {
-
-        for (Sector sector : sectorManager.getSectors()) {
-
-            System.out.println("板块：" + sector.getName());
-
-            for (SectorComponent component : sector.getComponents()) {
-
-                System.out.println(
-                        component.getSymbol()
-                                + " 权重："
-                                + component.getWeight()
-                );
-            }
-        }
     }
 
     public void displayStock(
@@ -110,9 +78,9 @@ public class Menu{
         );
     }
 
-    public void showAllStocks(){
+    public void showAllStocks(List<Stock> stocks){
 
-        for(Stock stock : manager.getStocks()){
+        for(Stock stock : stocks){
 
             displayStock(stock);
 
@@ -120,7 +88,7 @@ public class Menu{
 
     }
 
-    public void start() {
+    public void start() throws SQLException {
 
         while (true) {
 
@@ -130,40 +98,20 @@ public class Menu{
                     "========== 股票监控系统 =========="
             );
 
-            System.out.println(
-                    "1. 查看所有股票"
-            );
-
-            System.out.println(
-                    "2. 查询股票"
-            );
-
-            System.out.println(
-                    "3. 添加股票"
-            );
-
-            System.out.println(
-                    "4. 删除股票"
-            );
-
-            System.out.println(
-                    "5. 按股票代码排序"
-            );
-
-            System.out.println(
-                    "6. 按当前价格从高到低排序"
-            );
-
-            System.out.println(
-                    "7. 按涨跌幅从高到低排序"
-            );
-
+            System.out.println("1. 查看所有股票");
+            System.out.println("2. 查询股票");
+            System.out.println("3. 添加股票");
+            System.out.println("4. 删除股票");
+            System.out.println("5. 按股票代码排序");
+            System.out.println("6. 按当前价格从高到低排序");
+            System.out.println("7. 按涨跌幅从高到低排序");
             System.out.println("8. 从 Alpaca 获取股票");
             System.out.println("9. 退出");
             System.out.println("10. 刷新指定股票行情");
             System.out.println("11. 查看全部板块");
             System.out.println("12. 刷新板块行情");
             System.out.println("13. 查看板块详情");
+            System.out.println("14. 更正已保存的股票价格");
 
             int choice = InputUtil.readInt(
                     scanner,
@@ -172,8 +120,9 @@ public class Menu{
 
 
             if (choice == 1) {
-
-                showAllStocks();
+                StockRepository repository=new StockRepository();
+                List<Stock> stocks=repository.findAll(connection,choice);
+                showAllStocks(stocks);
 
             } else if (choice == 2) {
 
@@ -185,7 +134,8 @@ public class Menu{
                 String search =
                         scanner.nextLine().trim();
 
-                Stock stock=manager.searchStock(search);
+                StockRepository repository= new StockRepository();
+                Stock stock=repository.findBySymbol(connection,search);
 
                 if(stock!=null){
                     displayStock(stock);
@@ -197,49 +147,58 @@ public class Menu{
 
             } else if (choice == 3) {
 
-                String symbol=InputUtil.readStockSymbol(scanner,manager);
+                System.out.print("请输入要添加的股票代码（例如 AMD、NVDA）：");
+                String symbol=scanner.nextLine().trim();
+                StockRepository repository=new StockRepository();
+                Stock stock=repository.findBySymbol(connection,symbol);
+                if(stock==null){
+                    double previousClose =
+                            InputUtil.readPositiveDouble(
+                                    scanner,
+                                    "请输入昨日价格："
+                            );
 
-                double previousClose =
-                        InputUtil.readPositiveDouble(
-                                scanner,
-                                "请输入昨日价格："
-                        );
 
-
-                double currentPrice =
-                        InputUtil.readPositiveDouble(
-                                scanner,
-                                "请输入当前价格："
-                        );
-
-                manager.addStock(symbol,previousClose,currentPrice);
+                    double currentPrice =
+                            InputUtil.readPositiveDouble(
+                                    scanner,
+                                    "请输入当前价格："
+                            );
+                    int insertedRows=repository.insert(connection,symbol,previousClose,currentPrice);
+                    if(insertedRows==1){
+                        System.out.println("添加成功，已保存到自选列表。");
+                    }
+                }else {
+                    System.out.println("该股票已在自选列表中，无需重复添加。");
+                }
 
             } else if (choice == 4) {
 
                 System.out.print("请输入股票代码：");
                 String symbol = scanner.nextLine();
 
-                boolean result =
-                        manager.deleteStock(symbol);
+                StockRepository repository=new StockRepository();
+                try {
+                    int deleteRows = repository.delete(connection, symbol);
+                    if(deleteRows==1){
+                        System.out.println("删除成功");
+                    }else{
+                        System.out.println("未找到股票");
+                    }
+                } catch (SQLException e) {
+                    if(e.getErrorCode()==1451){
+                        System.out.println("该股票仍属于某个板块，请先将它移出板块再删除。");
 
-
-                if(result){
-
-                    System.out.println(
-                            "删除成功"
-                    );
-
-                }else{
-
-                    System.out.println(
-                            "未找到股票"
-                    );
-
+                    }else {
+                        System.out.println("删除失败，请稍后重试。");
+                    }
                 }
+
             } else if (choice == 5) {
 
-                manager.sortBySymbol();
-
+                StockRepository repository=new StockRepository();
+                List<Stock> stocks= repository.findAll(connection,choice);
+                showAllStocks(stocks);
 
                 System.out.println(
                         "已按股票代码排序"
@@ -247,17 +206,18 @@ public class Menu{
 
             } else if (choice == 6) {
 
-                manager.sortByCurrentPrice();
-
-
+                StockRepository repository=new StockRepository();
+                List<Stock> stocks= repository.findAll(connection,choice);
+                showAllStocks(stocks);
                 System.out.println(
                         "已按当前价格从高到低排序"
                 );
 
             } else if (choice == 7) {
 
-                manager.sortByChangePercent();
-
+                StockRepository repository=new StockRepository();
+                List<Stock> stocks= repository.findAll(connection,choice);
+                showAllStocks(stocks);
 
                 System.out.println(
                         "已按涨跌幅从高到低排序"
@@ -267,30 +227,33 @@ public class Menu{
                 System.out.println("请输入股票代码：");
                 String symbol = scanner.nextLine().trim().toUpperCase();
 
-                Stock existingStock = manager.searchStock(symbol);
+                StockRepository repository=new StockRepository();
+                Stock existingStock=repository.findBySymbol(connection,symbol);
+                if(existingStock==null){
+
+                        try {
+                            StockApiClient client = new StockApiClient();
 
 
-                if (existingStock == null) {
+                            Stock stock = client.fetchStock(symbol);
 
-                    try {
-                        StockApiClient client = new StockApiClient();
+                            int addedRows=repository.insert(connection,stock.getSymbol(),stock.getPreviousClose(),stock.getCurrentPrice());
+                            if(addedRows==1){
+                                displayStock(stock);
+                                System.out.println("已添加到自选列表");
+
+                            }
 
 
-                        Stock stock = client.fetchStock(symbol);
+                        } catch (IOException e) {
+                            System.out.println("获取股票失败：" + e.getMessage());
 
-                        manager.addStock(stock);
-                        displayStock(stock);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            System.out.println("股票请求被中断");
+                            return;
+                        }
 
-                        System.out.println("已添加到自选列表");
-
-                    } catch (IOException e) {
-                        System.out.println("获取股票失败：" + e.getMessage());
-
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        System.out.println("股票请求被中断");
-                        return;
-                    }
 
                 } else {
 
@@ -305,23 +268,18 @@ public class Menu{
                 System.out.print("请输入要刷新的股票代码：");
 
                 String symbol=scanner.nextLine().trim().toUpperCase();
-                Stock oldStock=manager.searchStock(symbol);
-                if (oldStock == null) {
-                    System.out.println("自选列表中没有这只股票");
-                    continue;
-                }
-
+                StockRepository repository=new StockRepository();
                 try {
                     StockApiClient client=new StockApiClient();
 
                     Stock newStock=client.fetchStock(symbol);
-                    boolean updated = manager.updateStock(newStock);
-                    if (updated) {
-                        displayStock(newStock);
-                        System.out.println("刷新成功");
-                    } else {
-                        System.out.println("刷新失败：未找到原股票");
+                    int updatedRows=repository.updateQuote(connection,newStock);
+                    if (updatedRows == 0) {
+                        System.out.println("自选列表中没有这只股票");
+                        continue;
                     }
+                    displayStock(newStock);
+                    System.out.println("行情刷新成功");
                 }catch (IOException e){
                     System.out.println("刷新失败：" + e.getMessage());
                 }catch (InterruptedException e) {
@@ -330,35 +288,49 @@ public class Menu{
                     return;
                 }
             } else if (choice == 11) {
-                displaySectors();
+
+                SectorRepository sectorRepository=new SectorRepository();
+                List<String> names=sectorRepository.findAllNames(connection);
+                for (String name:names){
+                    System.out.println("板块：" + name);
+                }
             } else if (choice == 12) {
 
                 System.out.print("请输入板块名称：");
-                String name = scanner.nextLine().trim();
+                String sectorName = scanner.nextLine().trim();
 
-                Sector sector = sectorManager.searchSector(name);
+                SectorRepository repository=new SectorRepository();
+                List<SectorStockDetail> details =
+                        repository.findComponentsBySectorName(connection, sectorName);
 
-                if (sector == null) {
-                    System.out.println("板块不存在");
-
-                } else if (!sector.isWeightValid()) {
-                    System.out.println("板块权重配置不合法");
-
+                if (details.isEmpty()) {
+                    System.out.println("没有找到可刷新的板块成分。");
                 } else {
-
-                    boolean refresh = refreshSectorStocks(sector);
+                    double totalWeight=0.0;
+                    for (SectorStockDetail detail:details){
+                        totalWeight=totalWeight+detail.getWeight();
+                    }
+                    if (Math.abs(totalWeight - 1.0) > 0.000001) {
+                        System.out.println("板块成分权重合计不是 100%，无法刷新。");
+                        continue;
+                    }
+                    boolean refresh = refreshSectorStocks(details);
 
                     if (!refresh) {
                         System.out.println("板块数据刷新不完整");
 
                     } else {
+                        List<SectorStockDetail> updatedDetails =
+                                repository.findComponentsBySectorName(connection, sectorName);
 
-                        double changePercent =
-                                sector.calculateChangePercent(manager);
-
+                        double changePercent=0.0;
+                        for(SectorStockDetail detail:updatedDetails){
+                            double contribution = detail.getStock().getChangePercent() * detail.getWeight();
+                            changePercent=changePercent+contribution;
+                        }
                         System.out.printf(
                                 "板块 %s 涨跌幅：%.2f%%%n",
-                                sector.getName(),
+                                sectorName,
                                 changePercent
                         );
                     }
@@ -366,66 +338,33 @@ public class Menu{
             } else if (choice == 13) {
 
                 System.out.print("请输入板块名称：");
+                double totalChangePercent = 0.0;
                 String name = scanner.nextLine().trim();
+                SectorRepository repository=new SectorRepository();
+                List<SectorStockDetail> details=repository.findComponentsBySectorName(connection,name);
 
-                Sector sector = sectorManager.searchSector(name);
+                for(SectorStockDetail detail:details){
+                    displayStock(detail.getStock());
+                    System.out.printf("权重：%.0f%%%n", detail.getWeight() * 100);
+                    double contribution = detail.getStock().getChangePercent() * detail.getWeight();
+                    totalChangePercent=totalChangePercent+contribution;
+                    System.out.printf("对板块的贡献：%+.2f 个百分点%n", contribution);
+                }
+                System.out.printf("板块 %s 总涨跌幅：%+.2f%%%n", name, totalChangePercent);
 
-                if (sector == null) {
+            }
 
-                    System.out.println("板块不存在");
+            else if(choice==14){
+                System.out.print("请输入要更正的股票代码：");
+                String symbol=scanner.nextLine().trim();
 
-                } else if (!sector.isWeightValid()) {
-
-                    System.out.println("板块权重配置不合法");
-
-                } else {
-
-                    boolean refresh = refreshSectorStocks(sector);
-
-                    if (!refresh) {
-
-                        System.out.println("板块数据刷新不完整");
-
-                    } else {
-
-                        double changePercent =
-                                sector.calculateChangePercent(manager);
-
-                        System.out.println();
-                        System.out.println(
-                                "========== " + sector.getName() + " =========="
-                        );
-
-                        System.out.printf(
-                                "板块涨跌幅：%+.2f%%%n%n",
-                                changePercent
-                        );
-
-                        for (SectorComponent component : sector.getComponents()) {
-
-                            Stock stock =
-                                    manager.searchStock(component.getSymbol());
-
-                            System.out.println(component.getSymbol());
-
-                            System.out.printf(
-                                    "涨跌幅：%+.2f%%%n",
-                                    stock.getChangePercent()
-                            );
-
-                            System.out.printf(
-                                    "权重：%.0f%%%n",
-                                    component.getWeight() * 100
-                            );
-
-                            System.out.printf(
-                                    "贡献：%+.2f%%%n",
-                                    component.calculateContribution(stock)
-                            );
-
-                            System.out.println();
-                        }
-                    }
+                double cur = InputUtil.readPositiveDouble(scanner, "请输入新的当前价格：");
+                StockRepository repository=new StockRepository();
+                int updatedRows=repository.update(connection,symbol,cur);
+                if(updatedRows==1){
+                    System.out.println("价格更正成功，已保存到数据库。");
+                }else {
+                    System.out.println("没有更新到股票记录，请检查股票代码。");
                 }
             }
         }
